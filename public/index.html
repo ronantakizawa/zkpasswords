@@ -6,21 +6,19 @@
 <body>
 
   <h1>Zero-Knowledge Password Check</h1>
-  <p>Using a ZK-Snark, this password verification handles authentication without storing your password
-  </p>
-  </p>
+  <p>Using a ZK-Snark, this password verification handles authentication without storing your password.</p>
 
-  <label for="ageInput">Enter "password":</label>
-  <input type="password" id="passwordInput" name="passwordInput" >
-  <button id="bGenProof"> Check </button>
 
-  <pre class="proof"> Answer: <code id="answer"></code></pre>
-  <pre class="proof"> Proof: <code id="proof"></code></pre>
-  <pre class="proof"> Result: <code id="result"></code></pre>
+  <label for="passwordDefine">Define password:</label>
+  <input type="password" id="passwordDefine" name="passwordDefine">
+  <button id="setPassword">Submit</button>
 
-  <script src="snarkjs.min.js"></script>
-  <!-- Link to the external JS file -->
+  <label for="passwordAttempt">Try password:</label>
+  <input type="password" id="passwordAttempt" name="passwordAttempt">
+  <button id="bCheckProof">Check</button>
+
+  <p id="output"></p>
+
   <script src="password.js"></script>
-
 </body>
 </html>

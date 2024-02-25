@@ -1,38 +1,48 @@
-const proofComponent = document.getElementById('proof');
-const resultComponent = document.getElementById('result');
-const bGenProof = document.getElementById("bGenProof");
-const ansComponent = document.getElementById("answer");
-const passwordInput = document.getElementById("passwordInput"); 
-
-bGenProof.addEventListener("click", calculateProof);
-
-async function calculateProof() {
-    const passwordString = passwordInput.value;
-
-    const passwordNum = stringToAsciiConcatenated(passwordString);
-    console.log(passwordNum);
-
-    const { proof, publicSignals } =
-      await snarkjs.plonk.fullProve({attempt: BigInt(passwordNum)}, "./circuit.wasm", "circuit_final.zkey");
-
-    proofComponent.innerHTML = JSON.stringify(proof, null, 1);
-
-    const vkey = await fetch("verification_key.json").then(function(res) {
-        return res.json();
-    });
-
-    const res = await snarkjs.plonk.verify(vkey, publicSignals, proof);
-
-    resultComponent.innerHTML = res ? "Verification successful" : "Verification failed";
-
-    const ans = publicSignals[0] === '1' ? "Correct Passowrd" : "Incorrect Password"
-    ansComponent.innerText = ans
-}
-
-function stringToAsciiConcatenated(inputString) {
-    let asciiConcatenated = '';
-    for (let i = 0; i < inputString.length; i++) {
-      asciiConcatenated += inputString.charCodeAt(i).toString();
+document.getElementById('setPassword').addEventListener('click', async () => {
+    const newPassword = document.getElementById('passwordDefine').value;
+    if (newPassword === '') {
+        alert('Password cannot be empty');
+        return false;
     }
-    return asciiConcatenated;
-  }
+    if (newPassword.length > 20) {
+      alert('Password cannot be longer than 20 characters');
+      return false; // Prevent the form from being submitted
+    }
+  
+    try {
+      const response = await fetch('/set-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ newPassword }),
+      });
+      const data = await response.json();
+      alert(data.message)
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  });
+
+document.getElementById('bCheckProof').addEventListener('click', async () => {
+    const passwordAttempt = document.getElementById('passwordAttempt').value;
+  
+    try {
+      const response = await fetch('/check-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ passwordAttempt }),
+      });
+  
+      const data = await response.json();
+      // Display logs instead of just the message
+      document.getElementById('output').textContent = data.logs;
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  });
+  
+  
+  
