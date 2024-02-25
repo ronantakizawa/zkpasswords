@@ -1,7 +1,7 @@
 <!doctype html>
 <html>
 <head>
-  <title>ZK Password Check</title>
+  <title>ZK Auth</title>
 </head>
 <body>
 
@@ -9,13 +9,23 @@
   <p>Using a ZK-Snark, this password verification handles authentication without storing your password.</p>
 
 
-  <label for="passwordDefine">Define password:</label>
-  <input type="password" id="passwordDefine" name="passwordDefine">
-  <button id="setPassword">Submit</button>
+  <div style="margin-bottom: 20px;">
+    <label for="usernameDefine">Set Username:</label><br>
+    <input type="text" id="usernameDefine" name="usernameDefine"><br>
+    
+    <label for="passwordDefine">Set Password:</label><br>
+    <input type="password" id="passwordDefine" name="passwordDefine"><br>
+    <button id="setPassword">Submit</button>
+  </div>
 
-  <label for="passwordAttempt">Try password:</label>
-  <input type="password" id="passwordAttempt" name="passwordAttempt">
-  <button id="bCheckProof">Check</button>
+
+  <div style="margin-bottom: 20px;">
+    <label for="usernameAttempt">Username</label><br>
+    <input type="text" id="usernameAttempt" name="usernameAttempt"><br>
+    <label for="passwordAttempt">Password</label><br>
+    <input type="password" id="passwordAttempt" name="passwordAttempt"><br>
+    <button id="bCheckProof">Login</button>
+  </div>
 
   <p id="output"></p>
 

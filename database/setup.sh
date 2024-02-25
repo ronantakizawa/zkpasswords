@@ -5,13 +5,13 @@ echo "Creating circuit.circom file..."
 cat <<EOT > circuit.circom
 pragma circom 2.1.6;
 
-include "node_modules/circomlib/circuits/comparators.circom";
+include "../../node_modules/circomlib/circuits/comparators.circom";
 
 template Main() {
     signal input attempt;
     signal output isEqual;
 
-    var password = 104105;
+    var password = 11411111097110;
     component eqChecker = IsEqual();
     attempt ==> eqChecker.in[0];
     password ==> eqChecker.in[1];
@@ -36,7 +36,7 @@ echo "R1CS exported to JSON."
 echo "Creating input.json file..."
 # Create input.json file with the provided content
 cat <<EOT > input.json
-{"attempt": 1234}
+{"attempt": 1}
 EOT
 echo "input.json file created."
 
