@@ -13,5 +13,6 @@ More on ZK-Snarks: https://z.cash/learn/what-are-zk-snarks/
 
 More on Plonk: https://eprint.iacr.org/2019/953.pdf
 
-https://github.com/ronantakizawa/zkpasswords/assets/71115970/8f37a839-5cae-46a7-b561-d5573e0c4551
 
+
+https://github.com/ronantakizawa/zkpasswords/assets/71115970/858ed6d0-a53f-444d-89a3-d178d53e2c55

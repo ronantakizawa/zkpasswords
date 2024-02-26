@@ -1,0 +1,28 @@
+{
+    "name": "zkauth",
+    "version": "1.0.0",
+    "description": "Zero Knowledge Authentication using snarkjs, Plonk",
+    "main": "index.js",
+    "scripts": {
+      "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+      "type": "git",
+      "url": "git+https://github.com/ronantakizawa/zkauth.git"
+    },
+    "keywords": [
+      "zeroknowledge",
+      "snarkjs",
+      "authentication"
+    ],
+    "author": "Your Name <your.email@example.com>",
+    "license": "ISC",
+    "bugs": {
+      "url": "https://github.com/ronantakizawa/zkauth/issues"
+    },
+    "homepage": "https://github.com/ronantakizawa/zkauth#readme",
+    "dependencies": {
+      "node-fetch": "^2.6.7"
+    }
+  }
+  
