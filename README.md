@@ -1,4 +1,4 @@
-**Zero-Knowledge Password Check**
+**Zero-Knowledge Authentication**
 
 https://zksnarkagecheck.vercel.app/
 
@@ -12,4 +12,6 @@ The app will check that you have the right password without knowing your passwor
 More on ZK-Snarks: https://z.cash/learn/what-are-zk-snarks/
 
 More on Plonk: https://eprint.iacr.org/2019/953.pdf
-<img width="835" alt="Screenshot 2024-02-24 at 10 00 11 PM" src="https://github.com/ronantakizawa/zkpasswords/assets/71115970/455a1c3f-4a4f-4ba8-9793-827a9f45378d">
+
+https://github.com/ronantakizawa/zkpasswords/assets/71115970/8f37a839-5cae-46a7-b561-d5573e0c4551
+

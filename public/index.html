@@ -1,33 +1,24 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
   <title>ZK Auth</title>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
 </head>
-<body>
+<body class="bg-gray-100 text-gray-800">
 
-  <h1>ZK Auth</h1>
-  <p>Using a ZK-Snark, this login form handles authentication without storing your password.</p>
+  <div class="min-h-screen flex flex-col items-center justify-center">
+    <h1 class="text-3xl font-bold text-gray-800 mb-2">ZK Auth</h1>
+    <p class="text-gray-600 mb-8">Using a ZK-Snark, this login form handles authentication without storing your password.</p>
 
+    <div class="flex flex-col ">
+      <a href="/signup" class="text-3xl bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline mb-4">Get Started</a>
+      <a href="/login" class="text-3xl text-center bg-gray-800 hover:bg-gray-700 text-white font-bold py-2 px-2 rounded focus:outline-none focus:shadow-outline">Login</a>
+    </div>
 
-  <div style="margin-bottom: 20px;">
-    <label for="usernameDefine">Set Username:</label><br>
-    <input type="text" id="usernameDefine" name="usernameDefine"><br>
-    
-    <label for="passwordDefine">Set Password:</label><br>
-    <input type="password" id="passwordDefine" name="passwordDefine"><br>
-    <button id="setPassword">Submit</button>
   </div>
+      
 
 
-  <div style="margin-bottom: 20px;">
-    <label for="usernameAttempt">Username</label><br>
-    <input type="text" id="usernameAttempt" name="usernameAttempt"><br>
-    <label for="passwordAttempt">Password</label><br>
-    <input type="password" id="passwordAttempt" name="passwordAttempt"><br>
-    <button id="bCheckProof">Login</button>
-  </div>
-
-  <p id="output"></p>
 
   <script src="password.js"></script>
 </body>

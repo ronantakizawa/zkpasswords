@@ -16,7 +16,7 @@ app.post('/set-password', async (req, res) => {
   const newDirPath = path.join(__dirname, newUsername);
   if (fs2.existsSync(newDirPath)) {
     // If it exists, send a message indicating the username is already taken
-    return res.json({ message: "Username already taken" });
+    return res.status(400).json({ message: "Username already taken" });
   }
   try {
     // Create a new directory with newUsername as its name
@@ -85,12 +85,8 @@ async function run(usernameAttempt,passwordAttempt) {
   let logs = ""; // Initialize a string to accumulate logs
 
   const { proof, publicSignals } = await snarkjs.plonk.fullProve({attempt: passwordAttempt}, `./${usernameAttempt}/circuit.wasm`, `./${usernameAttempt}/circuit_final.zkey`);
-  const result = publicSignals[0] === '1' ? "Correct Password" : "Incorrect Password";
+  const result = publicSignals[0] === '1' ? "Login Successful!" : "Incorrect Password";
   logs += result + "\n";
-
-
-  // Accumulate logs instead of console.log
-  logs += "Proof: \n" + JSON.stringify(proof, null, 1) + "\n";
 
 
   return logs; // Return the accumulated logs
