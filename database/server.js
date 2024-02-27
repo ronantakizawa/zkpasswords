@@ -1,46 +1,56 @@
 const express = require('express');
 const fs = require('fs').promises;
-const fs2 = require('fs')
-const { exec } = require("child_process"); 
-const cors = require('cors'); 
-const snarkjs = require('snarkjs'); // Make sure to install and require snarkjs
-const app = express();
+const fs2 = require('fs');
 const path = require('path');
-const port = 8080;
+const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const snarkjs = require('snarkjs'); 
+const { exec } = require("child_process");
 
-app.use(express.json()); 
-app.use(cors()); 
+const app = express();
+const port = process.env.PORT || 8080; // Prefer environment variable for port
+
+// Apply Helmet for basic security practices
+app.use(helmet());
+
+// Enable CORS with default settings
+app.use(cors());
+
+// Rate limiting middleware
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+});
+app.use(limiter);
+
+// Parse JSON bodies (as sent by API clients)
+app.use(express.json());
+
+// Securely handle the creation of a new user password
 app.post('/set-password', async (req, res) => {
   const { newUsername, newPassword } = req.body;
-  const passwordToNum = BigInt(stringToAsciiConcatenated(newPassword));
+  // Basic input validation
+  
   const newDirPath = path.join(__dirname, newUsername);
+
   if (fs2.existsSync(newDirPath)) {
-    // If it exists, send a message indicating the username is already taken
     return res.status(400).json({ message: "Username already taken" });
   }
+
   try {
-    // Create a new directory with newUsername as its name
+    const passwordToNum = BigInt(stringToAsciiConcatenated(newPassword));
     await fs.mkdir(newDirPath, { recursive: true });
+    // Copy necessary files to the new user directory
+    const filesToCopy = ['setup.sh', 'pot14_final.ptau', 'circuit_final.zkey'];
+    for (const file of filesToCopy) {
+      await fs.copyFile(file, path.join(newDirPath, file));
+    }
 
-    // Copy files to the new directory
-    const setupFilePath = path.join(newDirPath, 'setup.sh');
-    await fs.copyFile('setup.sh', setupFilePath);
-    const potFilePath = path.join(newDirPath, 'pot14_final.ptau');
-    await fs.copyFile('pot14_final.ptau', potFilePath);
-    const zkeyFilePath = path.join(newDirPath, 'circuit_final.zkey');
-    await fs.copyFile('pot14_final.ptau', zkeyFilePath);
-
-
-    // Now, read the setup.sh file from the new directory
-    const data = await fs.readFile(newDirPath+"/setup.sh", 'utf8');
-    
-    // Replace the placeholder password with the new password
-    var result = data.replace(/var password = \d+;/, `var password = ${passwordToNum};`);
-    
-    // Write the updated script back to setup.sh in the new directory
-    await fs.writeFile(setupFilePath, result, 'utf8');
-    
-    // Execute the updated script from the new directory
+    // Read, modify, and write the setup.sh file
+    let setupFileContents = await fs.readFile(path.join(newDirPath, "setup.sh"), 'utf8');
+    setupFileContents = setupFileContents.replace(/var password = \d+;/, `var password = ${passwordToNum};`);
+    await fs.writeFile(path.join(newDirPath, "setup.sh"), setupFileContents, 'utf8');
     exec(`./setup.sh`, { cwd: newDirPath }, (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
@@ -59,37 +69,41 @@ app.post('/set-password', async (req, res) => {
 });
 
 app.post('/check-password', async (req, res) => {
-  const { usernameAttempt,passwordAttempt} = req.body;
+  const { usernameAttempt, passwordAttempt } = req.body;
+
+  // Basic input validation
+  if (!usernameAttempt || !passwordAttempt) {
+    return res.status(400).json({ message: "Invalid input" });
+  }
+
   const passwordNum = stringToAsciiConcatenated(passwordAttempt);
   const newDirPath = path.join(__dirname, usernameAttempt);
+
   if (!fs2.existsSync(newDirPath)) {
-    // If it exists, send a message indicating the username is already taken
     return res.status(404).json({ message: "Invalid Username" });
   }
 
   try {
-    const logs = await run(usernameAttempt,passwordNum);
-    res.status(200).json({ message: "Execution completed", logs: logs }); // Return logs within the response
+    const logs = await run(usernameAttempt, passwordNum);
+    res.status(200).json({ message: "Execution completed", logs: logs });
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'An error occurred', error: error.toString() });
   }
 });
 
-
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
-async function run(usernameAttempt,passwordAttempt) {
-  let logs = ""; // Initialize a string to accumulate logs
+async function run(usernameAttempt, passwordAttempt) {
+  let logs = "";
 
-  const { proof, publicSignals } = await snarkjs.plonk.fullProve({attempt: passwordAttempt}, `./${usernameAttempt}/circuit.wasm`, `./${usernameAttempt}/circuit_final.zkey`);
+  const { proof, publicSignals } = await snarkjs.plonk.fullProve({ attempt: passwordAttempt }, `./${usernameAttempt}/circuit.wasm`, `./${usernameAttempt}/circuit_final.zkey`);
   const result = publicSignals[0] === '1' ? "Login Successful!" : "Incorrect Password";
   logs += result + "\n";
 
-
-  return logs; // Return the accumulated logs
+  return logs;
 }
 
 function stringToAsciiConcatenated(inputString) {
@@ -100,3 +114,5 @@ function stringToAsciiConcatenated(inputString) {
   return asciiConcatenated;
 }
 
+// Note: Implement HTTPS in production by setting up SSL/TLS certificates
+// Note: Consider deploying behind a reverse proxy like Nginx for additional security and performance benefits
