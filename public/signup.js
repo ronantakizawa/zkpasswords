@@ -12,7 +12,7 @@ document.getElementById('setPassword').addEventListener('click', async () => {
     });
     const data = await response.json();
     alert(data.message)
-    if(response.status !== 400){
+    if(response.status === 200){
       window.location.href = '/login';
     }
   } catch (error) {

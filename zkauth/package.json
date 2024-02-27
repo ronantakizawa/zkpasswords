@@ -23,6 +23,7 @@
     "homepage": "https://github.com/ronantakizawa/zkauth#readme",
     "dependencies": {
       "node-fetch": "^2.6.7"
+
     }
   }
   

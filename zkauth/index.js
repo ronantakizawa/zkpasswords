@@ -1,60 +1,67 @@
 const fetch = require('node-fetch');
 
-async function setPassword(newUsername, newPassword) {
-    if (!newUsername || !newPassword) {
-      throw new Error('Username and Password cannot be empty');
+class ZKAuth {
+  constructor(apiKey) {
+    this.apiKey = apiKey;
+  }
+
+  async setPassword(newEmail, newPassword) {
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
+    var emailRegex = /\S+@\S+\.\S+/;
+    if (newPassword === '' || newEmail === '') {
+      return { status:400, message: "Email and password cannot be empty" };
     }
-  
-    if (newUsername.length > 20 || newPassword.length > 20) {
-      throw new Error('Username and Password cannot be longer than 20 characters');
+    if (!emailRegex.test(newEmail)) {
+      return { status:400, message: "Invalid Email Format" };
     }
-  
+    if (newPassword.length > 20) {
+      return { status:400, message: "Password must be less than 20 characters" };
+    }
+    if (!passwordRegex.test(newPassword)) {
+      return { status:400, message: "Password must be at least 12 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol" };
+    }
     try {
       const response = await fetch('http://localhost:8080/set-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'uuid': this.apiKey
         },
-        body: JSON.stringify({ newUsername, newPassword }),
+        body: JSON.stringify({ newEmail, newPassword }),
       });
       const data = await response.json();
-      if (response.status === 400) {
-        throw new Error(data.message);
-      }
-      return data.message;
+
+      return { status: response.status, message: data.message };
+
     } catch (error) {
-      console.error('Error:', error);
-      throw error;
+      console.error('Error during fetch operation:', error.message);
+      return { status:500,message: 'An error occurred while connecting to the database' };
     }
   }
-  
-async function checkPassword(usernameAttempt, passwordAttempt) {
-    if (!usernameAttempt || !passwordAttempt) {
-      throw new Error('Username and Password cannot be empty');
-    }
-  
-    if (usernameAttempt.length > 20 || passwordAttempt.length > 20) {
-      throw new Error('Username and Password cannot be longer than 20 characters');
-    }
-  
+
+  async checkPassword(emailAttempt, passwordAttempt) {
     try {
+      if (emailAttempt === '' || passwordAttempt === '') {
+        return { status:400, message: "Email and Password cannot be empty" };
+      }
+
       const response = await fetch('http://localhost:8080/check-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'uuid': this.apiKey
         },
-        body: JSON.stringify({ usernameAttempt, passwordAttempt }),
+        body: JSON.stringify({ emailAttempt, passwordAttempt }),
       });
+
       const data = await response.json();
-      if (response.status === 404) {
-        throw new Error("Invalid Username");
-      }
-      return data.logs;
+      return { status: response.status, message: data.message }; 
+
     } catch (error) {
-      console.error('Error:', error);
-      throw error;
+      console.error('Error during fetch operation:', error.message);
+      return { status:r00, message: 'An error occurred while connecting to the database' };
     }
   }
-  
-module.exports = { setPassword, checkPassword };
-  
+}
+
+module.exports = ZKAuth;

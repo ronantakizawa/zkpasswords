@@ -1,6 +1,9 @@
 // Import necessary modules
 const express = require('express');
 const cors = require('cors');
+const ZKAuth = require('zkauth');
+
+const zk = new ZKAuth('96644693-6cfb-4c2e-a4b3-c52760255a43');
 
 // Initialize express app
 const app = express();
@@ -33,42 +36,17 @@ app.get('/login', (req, res) => {
 app.get('/signup', (req, res) => {
   res.sendFile('signup.html', { root: 'public' });
 });
+app.get('/passwordreset', (req, res) => {
+  res.sendFile('reset.html', { root: 'public' });
+});
 
 app.post('/set-password', async (req, res) => {
-  const { newEmail,newPassword } = req.body;
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{12,}$/;
-  var emailRegex = /\S+@\S+\.\S+/;
-  if (newPassword === '' || newEmail === '') {
-    return res.status(400).json({message:"Email and password cannot be empty"});
-  }
-  if(!emailRegex.test(newEmail)){
-    return res.status(400).json({message:"Invalid Email Format"});
-
-  }
-  if (newPassword.length > 20) {
-    return res.status(400).json({message:"Password must be less than 20 characters"});
-  }
-
-  if (!passwordRegex.test(newPassword)) {
-    return res.status(400).json({message:"Password must be at least 12 characters long and include at least one uppercase letter, one lowercase letter, one number, and one symbol"});
-  }
   try {
-
-    const response = await fetch('http://localhost:8080/set-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'UUID': uuid
-      },
-      body: JSON.stringify({ newEmail, newPassword }),
-    });
-    const data = await response.json();
-
-    if(data.message!=="Password setup successfully"){
-      return res.status(400).json({message:data.message});
-    }
-
-    return res.json(data);
+    const { newEmail,newPassword } = req.body;
+    const response = await zk.setPassword(newEmail,newPassword);
+    console.log(response.status)
+    return res.status(response.status).json({message:response.message});
+    
   } catch (error) {
     console.error('Error during fetch operation:', error.message);
     res.status(500).send('An error occurred while connecting to the databse');
@@ -80,22 +58,9 @@ app.post('/set-password', async (req, res) => {
 app.post('/check-password', async (req, res) => {
   try {
     const { emailAttempt, passwordAttempt } = req.body;
-    if (emailAttempt === '' || passwordAttempt === '') {
-      return res.json({message:"Email and Password cannot be empty"})
-    }
-
-    const response = await fetch('http://localhost:8080/check-password', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'UUID': uuid
-      },
-      body: JSON.stringify({ emailAttempt, passwordAttempt }),
-    });
-
-    const data = await response.json();
-    return res.json({message:data.message});
-
+    const response = await zk.checkPassword(emailAttempt, passwordAttempt);
+    console.log(response.message);
+    return res.json({message:response.message});
   } catch (error) {
     // Handle errors, such as network issues or JSON parsing problems
     console.error('Error during fetch operation:', error.message);
