@@ -15,7 +15,12 @@ const port = process.env.PORT || 8080; // Prefer environment variable for port
 app.use(helmet());
 
 // Enable CORS with default settings
-app.use(cors());
+const corsOptions = {
+  origin: 'http://localhost:3000',
+  methods: 'POST',
+  optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+};
+app.use(cors(corsOptions));
 
 // Rate limiting middleware
 const limiter = rateLimit({
@@ -29,29 +34,30 @@ app.use(express.json());
 
 // Securely handle the creation of a new user password
 app.post('/set-password', async (req, res) => {
-  const { newUsername, newPassword } = req.body;
-  // Basic input validation
-  
-  const newDirPath = path.join(__dirname, newUsername);
+  const { newEmail, newPassword } = req.body;
+  const providerUUID = req.headers['uuid'];
+  const newDirPath = path.join(providerUUID);
+  const newDirPathEmail = path.join(providerUUID+"/"+newEmail);
 
-  if (fs2.existsSync(newDirPath)) {
-    return res.status(400).json({ message: "Username already taken" });
+  if (!fs2.existsSync(newDirPath)) {
+    return res.status(400).json({ message: "Your authentication provider doesn't have an account with ZK Auth set up. Please notify them." });
+  }
+  if (fs2.existsSync(newDirPathEmail)) {
+    return res.status(404).json({ message: "Email already taken" });
   }
 
   try {
     const passwordToNum = BigInt(stringToAsciiConcatenated(newPassword));
-    await fs.mkdir(newDirPath, { recursive: true });
-    // Copy necessary files to the new user directory
+    await fs.mkdir(newDirPathEmail, { recursive: true });
     const filesToCopy = ['setup.sh', 'pot14_final.ptau', 'circuit_final.zkey'];
     for (const file of filesToCopy) {
-      await fs.copyFile(file, path.join(newDirPath, file));
+      await fs.copyFile(file, path.join(newDirPathEmail, file));
     }
 
-    // Read, modify, and write the setup.sh file
-    let setupFileContents = await fs.readFile(path.join(newDirPath, "setup.sh"), 'utf8');
+    let setupFileContents = await fs.readFile(path.join(newDirPathEmail, "setup.sh"), 'utf8');
     setupFileContents = setupFileContents.replace(/var password = \d+;/, `var password = ${passwordToNum};`);
-    await fs.writeFile(path.join(newDirPath, "setup.sh"), setupFileContents, 'utf8');
-    exec(`./setup.sh`, { cwd: newDirPath }, (error, stdout, stderr) => {
+    await fs.writeFile(path.join(newDirPathEmail, "setup.sh"), setupFileContents, 'utf8');
+    exec(`./setup.sh`, { cwd: newDirPathEmail }, (error, stdout, stderr) => {
       if (error) {
         console.error(`exec error: ${error}`);
         return res.status(500).send('Error executing setup script');
@@ -69,26 +75,24 @@ app.post('/set-password', async (req, res) => {
 });
 
 app.post('/check-password', async (req, res) => {
-  const { usernameAttempt, passwordAttempt } = req.body;
-
-  // Basic input validation
-  if (!usernameAttempt || !passwordAttempt) {
-    return res.status(400).json({ message: "Invalid input" });
-  }
-
-  const passwordNum = stringToAsciiConcatenated(passwordAttempt);
-  const newDirPath = path.join(__dirname, usernameAttempt);
+  const { emailAttempt, passwordAttempt } = req.body;
+  const providerUUID = req.headers['uuid'];
+  const newDirPath = path.join(providerUUID);
+  const newDirPathEmail = path.join(providerUUID+"/"+emailAttempt);
 
   if (!fs2.existsSync(newDirPath)) {
-    return res.status(404).json({ message: "Invalid Username" });
+    return res.status(400).json({ message: "Your authentication provider doesn't have an account with ZK Auth set up. Please notify them." });
+  }
+  if (!fs2.existsSync(newDirPathEmail)) {
+    return res.status(404).json({ message: "Invalid email address" });
   }
 
   try {
-    const logs = await run(usernameAttempt, passwordNum);
-    res.status(200).json({ message: "Execution completed", logs: logs });
+    const message = await run(providerUUID, emailAttempt, passwordAttempt);
+    res.status(200).json({ message: message});
   } catch (error) {
     console.error(error);
-    res.status(500).json({ message: 'An error occurred', error: error.toString() });
+    res.status(500).json({ message: 'An error occurred'});
   }
 });
 
@@ -96,14 +100,15 @@ app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}/`);
 });
 
-async function run(usernameAttempt, passwordAttempt) {
-  let logs = "";
+async function run(providerUUID,emailAttempt, passwordAttempt) {
+  const passwordNum = stringToAsciiConcatenated(passwordAttempt);
+  let message = "";
 
-  const { proof, publicSignals } = await snarkjs.plonk.fullProve({ attempt: passwordAttempt }, `./${usernameAttempt}/circuit.wasm`, `./${usernameAttempt}/circuit_final.zkey`);
+  const { publicSignals } = await snarkjs.plonk.fullProve({ attempt: passwordNum }, `./${providerUUID}/${emailAttempt}/circuit.wasm`, `./${providerUUID}/${emailAttempt}/circuit_final.zkey`);
   const result = publicSignals[0] === '1' ? "Login Successful!" : "Incorrect Password";
-  logs += result + "\n";
+  message += result + "\n";
 
-  return logs;
+  return message;
 }
 
 function stringToAsciiConcatenated(inputString) {
@@ -113,6 +118,3 @@ function stringToAsciiConcatenated(inputString) {
   }
   return asciiConcatenated;
 }
-
-// Note: Implement HTTPS in production by setting up SSL/TLS certificates
-// Note: Consider deploying behind a reverse proxy like Nginx for additional security and performance benefits

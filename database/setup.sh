@@ -5,7 +5,7 @@ echo "Creating circuit.circom file..."
 cat <<EOT > circuit.circom
 pragma circom 2.1.6;
 
-include "../../node_modules/circomlib/circuits/comparators.circom";
+include "../../../node_modules/circomlib/circuits/comparators.circom";
 
 template Main() {
     signal input attempt;
@@ -67,7 +67,7 @@ echo "Cleanup done."
 
 echo "Removing specified files..."
 # Remove specified files
-rm -f circuit.r1cs circuit.r1cs.json public.json proof.json witness.wtns circuit.sym input.json circuit.circom
+rm -f circuit.r1cs circuit.r1cs.json public.json proof.json witness.wtns circuit.sym input.json circuit.circom pot14_final.ptau setup.sh
 echo "Specified files removed."
 
 exit 0
