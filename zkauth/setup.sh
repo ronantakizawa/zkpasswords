@@ -1,11 +1,10 @@
 #!/bin/bash
-
 echo "Creating circuit.circom file..."
 # Create circuit.circom file with the provided content
 cat <<EOT > circuit.circom
 pragma circom 2.1.6;
 
-include "../../../node_modules/circomlib/circuits/comparators.circom";
+include "../../node_modules/circomlib/circuits/comparators.circom";
 
 template Main() {
     signal input attempt;
